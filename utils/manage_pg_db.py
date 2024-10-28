@@ -78,7 +78,7 @@ def get_settings(athlete_id: int):
     db = get_db()
     cur = db.cursor()
     query = 'SELECT * FROM settings WHERE id = %s;'
-    cur.execute(query, (athlete_id,)).fetchone()
+    cur.execute(query, (athlete_id,))
     sel = cur.fetchone()
     if sel:
         return Settings(*sel)
