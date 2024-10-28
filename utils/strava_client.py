@@ -3,7 +3,7 @@ import time
 
 import requests
 
-from utils import manage_db
+from utils import manage_pg_db
 from utils.exceptions import StravaAPIError
 
 
@@ -12,9 +12,9 @@ class StravaClient:
         self.__athlete_id = athlete_id
         self.__activity_id = activity_id
         self.__session = requests.Session()
-        tokens = manage_db.get_athlete(athlete_id)
+        tokens = manage_pg_db.get_athlete(athlete_id)
         tokens = self._update_tokens(tokens)
-        manage_db.add_athlete(tokens)
+        manage_pg_db.add_athlete(tokens)
         self.__headers = {'Authorization': f"Bearer {tokens.access_token}"}
 
     def _update_tokens(self, tokens):
@@ -29,7 +29,7 @@ class StravaClient:
         }
         try:
             refresh_response = self.__session.post("https://www.strava.com/oauth/token", data=params).json()
-            return manage_db.Tokens(tokens.id, refresh_response['access_token'],
+            return manage_pg_db.Tokens(tokens.id, refresh_response['access_token'],
                                     refresh_response['refresh_token'], refresh_response['expires_at'])
         except(KeyError, ValueError):
             raise StravaAPIError(f'Failed to refresh token ID={tokens.id}. Athlete ID={self.__athlete_id}.')

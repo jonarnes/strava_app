@@ -4,7 +4,7 @@ from multiprocessing import Process
 from flask import Flask, url_for, render_template, request, session, abort, redirect, jsonify, send_from_directory
 from flask_restful import reqparse
 
-from utils import weather, manage_db, strava_helpers, git_helpers
+from utils import weather, manage_pg_db, strava_helpers, git_helpers
 from utils.exceptions import StravaAPIError
 
 app = Flask(__name__)
@@ -14,9 +14,12 @@ app.config.from_mapping(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SECRET_KEY=os.environ.get('SECRET_KEY'),
-    DATABASE=os.path.join(app.root_path, os.environ.get('DATABASE'))
+    DATABASE_HOST=os.environ.get('DATABASE_HOST'),
+    DATABASE_USER=os.environ.get('DATABASE_USER'),
+    DATABASE_PASSWORD=os.environ.get('DATABASE_PASSWORD'),
+    DATABASE_NAME=os.environ.get('DATABASE_NAME')
 )
-manage_db.init_app(app)
+manage_pg_db.init_app(app)
 
 
 @app.route('/')
@@ -30,13 +33,13 @@ def index():
 def final():
     if 'id' not in session:
         return abort(500)
-    settings = manage_db.Settings(session['id'],
+    settings = manage_pg_db.Settings(session['id'],
                                   1 if 'icon' in request.values else 0,
                                   1 if 'humidity' in request.values else 0,
                                   1 if 'wind' in request.values else 0,
                                   1 if 'aqi' in request.values else 0,
                                   request.values.get('lan', 'ru'))
-    manage_db.add_settings(settings)
+    manage_pg_db.add_settings(settings)
     return render_template('final.html', athlete=session['athlete'])
 
 
@@ -48,11 +51,11 @@ def auth():
     auth_data = strava_helpers.get_tokens(code)
     try:
         athlete = auth_data['athlete']['firstname'] + ' ' + auth_data['athlete']['lastname']
-        tokens = manage_db.Tokens(auth_data['athlete']['id'], auth_data['access_token'],
+        tokens = manage_pg_db.Tokens(auth_data['athlete']['id'], auth_data['access_token'],
                                   auth_data['refresh_token'], auth_data['expires_at'])
     except KeyError:
         return abort(500)
-    manage_db.add_athlete(tokens)
+    manage_pg_db.add_athlete(tokens)
     session['athlete'] = athlete
     session['id'] = tokens.id
     return render_template('authorized.html', athlete=athlete)
@@ -81,7 +84,7 @@ def process_webhook_post():
         p.daemon = True
         p.start()
     if args['updates'].get('authorized', '') == 'false':
-        manage_db.delete_athlete(args['owner_id'])
+        manage_pg_db.delete_athlete(args['owner_id'])
 
 
 def process_webhook_get():
@@ -115,7 +118,7 @@ def robots():
 
 @app.route('/subscribers')
 def subscribers():
-    return {'count': manage_db.get_subscribers_count()}
+    return {'count': manage_pg_db.get_subscribers_count()}
 
 
 @app.route('/update_server', methods=['POST'])

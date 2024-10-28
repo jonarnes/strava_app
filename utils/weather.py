@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from urllib.parse import urlencode
 
-from utils import manage_db
+from utils import manage_pg_db
 from utils.strava_client import StravaClient
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
@@ -67,7 +67,7 @@ def add_weather(athlete_id: int, activity_id: int):
         print(f'WARNING: No start geo position for ID={activity_id}, T={start_time}')
         return  # ok, but no processing
 
-    settings = manage_db.get_settings(athlete_id)
+    settings = manage_pg_db.get_settings(athlete_id)
 
     if settings.icon:
         activity_title = activity.get('name')

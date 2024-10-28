@@ -3,3 +3,4 @@ GitPython~=3.1.18
 python-dotenv~=0.17
 requests>=2.25.1
 gunicorn>=23
+psycopg2-binary>=2.9.3
