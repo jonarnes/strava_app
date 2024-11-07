@@ -65,6 +65,7 @@ def auth():
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'POST':
+        print(request)
         process_webhook_post()
         return 'webhook ok', 200
     else:
@@ -80,7 +81,7 @@ def process_webhook_post():
     parser.add_argument('updates', type=dict, required=True)  # For de-auth, there is {"authorized": "false"}
     args = parser.parse_args()
     app.logger.info(args)  # TODO remove after debugging
-    #print(args)
+    print(args)
     if args['aspect_type'] == 'create' and args['object_type'] == 'activity':
         p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
         #p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
