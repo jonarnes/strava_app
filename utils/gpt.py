@@ -1,10 +1,6 @@
 import os
-import requests
-
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 from dotenv import load_dotenv
-from urllib.parse import urlencode
-import json
 from openai import OpenAI
 
 

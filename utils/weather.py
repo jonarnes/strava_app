@@ -4,7 +4,6 @@ import requests
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from urllib.parse import urlencode
-import json
 
 from utils import manage_pg_db
 from utils.strava_client import StravaClient
