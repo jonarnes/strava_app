@@ -16,7 +16,6 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 def test_gpt(athlete_id: int, activity_id: int):
     settings = manage_pg_db.get_settings(athlete_id)
     client = OpenAI()
-    #export OPENAI_API_KEY="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"
     strava = StravaClient(athlete_id, activity_id)
     activity = strava.get_activity
     
