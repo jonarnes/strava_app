@@ -13,6 +13,7 @@ from utils.strava_client import StravaClient
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
+
 def test_gpt(athlete_id: int, activity_id: int):
     settings = manage_pg_db.get_settings(athlete_id)
     client = OpenAI()
