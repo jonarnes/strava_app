@@ -4,10 +4,11 @@ import time
 from abc import abstractmethod, ABC
 from datetime import datetime, timezone, timedelta
 
+import responses
 import pytest
 # import responses
 
-from utils import weather, manage_db
+from utils import weather, manage_pg_db
 from utils.exceptions import StravaAPIError
 
 LAT = 55.752388  # Moscow latitude default
@@ -80,7 +81,7 @@ def test_get_weather_icon():
 
 
 def test_get_weather_description():
-    settings = manage_db.DEFAULT_SETTINGS
+    settings = manage_pg_db.DEFAULT_SETTINGS
     descr = weather.get_weather_description(LAT, LNG, TIME, settings)
     print(descr)
     assert re.fullmatch(r'(\w+\s?){1,3}, 🌡.-?\d{1,2}°C \(по ощущениям -?\d{1,2}°C\), '
@@ -89,7 +90,7 @@ def test_get_weather_description():
 
 def test_get_weather_description_no_wind(monkeypatch):
     monkeypatch.setattr('requests.get', lambda *args: MockResponse())
-    settings = manage_db.DEFAULT_SETTINGS
+    settings = manage_pg_db.DEFAULT_SETTINGS
     descr = weather.get_weather_description(LAT, LNG, TIME, settings)
     print(descr)
     assert re.fullmatch(r'Weather description, 🌡.-15°C \(по ощущениям 23°C\), 💦.64%, 💨.0м/с.', descr)
@@ -97,7 +98,7 @@ def test_get_weather_description_no_wind(monkeypatch):
 
 def test_get_weather_description_failed():
     """openweatherapi supply only last 5 days weather data for free account, in other case we get exception"""
-    settings = manage_db.DEFAULT_SETTINGS
+    settings = manage_pg_db.DEFAULT_SETTINGS
     assert '' == weather.get_weather_description(LAT, LNG, TIME - timedelta(days=6), settings)
 
 
@@ -105,7 +106,7 @@ def test_get_weather_description_failed():
 def test_get_weather_description_bad_response():
     """Case when something wrong with openweatherapi response"""
     responses.add(responses.GET, re.compile(r'http://api\.openweathermap\.org/data/2\.5/onecall/.*'), body='error')
-    settings = manage_db.DEFAULT_SETTINGS
+    settings = manage_pg_db.DEFAULT_SETTINGS
     assert '' == weather.get_weather_description(LAT, LNG, TIME, settings)
 
 
@@ -125,7 +126,7 @@ def test_add_weather_bad_activity(strava_client_mock, monkeypatch):
     In all this cases there is no needed to add the weather information to this activity."""
 
     monkeypatch.setattr(weather, 'StravaClient', strava_client_mock)
-    monkeypatch.setattr(manage_db, 'get_settings', lambda *args: manage_db.DEFAULT_SETTINGS._replace(icon=1))
+    monkeypatch.setattr(manage_pg_db, 'get_settings', lambda *args: manage_pg_db.DEFAULT_SETTINGS._replace(icon=1))
     monkeypatch.setattr(weather, 'get_weather_description', lambda *args: '')
     monkeypatch.setattr(weather, 'get_weather_icon', lambda *args: 'icon')
     assert weather.add_weather(0, 0) is None
@@ -136,15 +137,15 @@ def test_add_weather_bad_response(monkeypatch, db_token, database):
     activity_id = 1
     athlete_tokens = db_token[0]
     responses.add(responses.GET, f'https://www.strava.com/api/v3/activities/{activity_id}', body='')
-    monkeypatch.setattr(manage_db, 'get_db', lambda: database)
+    monkeypatch.setattr(manage_pg_db, 'get_db', lambda: database)
 
     with pytest.raises(StravaAPIError):
         weather.add_weather(athlete_tokens.id, activity_id)
     assert len(responses.calls) == 1
 
 
-settings_to_try = [manage_db.DEFAULT_SETTINGS._replace(icon=1), manage_db.DEFAULT_SETTINGS._replace(icon=0),
-                   manage_db.DEFAULT_SETTINGS._replace(icon=0, aqi=0)]
+settings_to_try = [manage_pg_db.DEFAULT_SETTINGS._replace(icon=1), manage_pg_db.DEFAULT_SETTINGS._replace(icon=0),
+                   manage_pg_db.DEFAULT_SETTINGS._replace(icon=0, aqi=0)]
 
 
 @pytest.mark.parametrize('output_settings', settings_to_try)
@@ -164,7 +165,7 @@ def test_add_weather_success(monkeypatch, output_settings):
                     'start_date': time.strftime('%Y-%m-%dT%H:%M:%SZ'), 'name': 'Activity name'}
 
     monkeypatch.setattr(weather, 'StravaClient', StravaClient)
-    monkeypatch.setattr(manage_db, 'get_settings', lambda *args: output_settings)
+    monkeypatch.setattr(manage_pg_db, 'get_settings', lambda *args: output_settings)
     monkeypatch.setattr(weather, 'get_weather_description', lambda *args: '')
     monkeypatch.setattr(weather, 'get_air_description', lambda *args: '')
     monkeypatch.setattr(weather, 'get_weather_icon', lambda *args: 'icon')

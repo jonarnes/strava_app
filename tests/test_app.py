@@ -5,7 +5,7 @@ import urllib.parse
 import pytest
 from flask import url_for
 
-from utils import weather, manage_db, strava_helpers
+from utils import weather, manage_pg_db, strava_helpers
 from run import app as site, process_webhook_get
 
 
@@ -48,7 +48,7 @@ def test_final_page(client, monkeypatch, capsys, params_from_auth):
     with client.session_transaction() as session:
         session['id'] = 1
         session['athlete'] = 'Test User'
-    monkeypatch.setattr(manage_db, 'add_settings', print)
+    monkeypatch.setattr(manage_pg_db, 'add_settings', print)
     # WHEN the '/final/' page is requested (POST)
     response = client.post(url_for('final'), data=params_from_auth)
     out, err = capsys.readouterr()
@@ -84,7 +84,7 @@ def test_auth_page(client, monkeypatch):
     auth_data_mock = {'athlete': {'firstname': 'Test', 'lastname': 'User', 'id': 1},
                       'access_token': 'test_AT', 'refresh_token': 'test_RT', 'expires_at': 'test_EA'}
     monkeypatch.setattr(strava_helpers, 'get_tokens', lambda arg: auth_data_mock)
-    monkeypatch.setattr(manage_db, 'add_athlete', lambda arg: print)
+    monkeypatch.setattr(manage_pg_db, 'add_athlete', lambda arg: print)
     # WHEN the '/authorization_successful' page is requested (GET)
     response = client.get(url_for('auth'), query_string={'code': 1})
     # THEN check that the response is valid
@@ -193,7 +193,7 @@ data_to_try = [
 def test_webhook_post(client, monkeypatch, data):
     # GIVEN a Flask application configured for testing
     monkeypatch.setattr(weather, 'add_weather', lambda *args: None)
-    monkeypatch.setattr(manage_db, 'delete_athlete', lambda arg: None)
+    monkeypatch.setattr(manage_pg_db, 'delete_athlete', lambda arg: None)
     # WHEN the '/webhook/' page is requested (GET)
     response = client.post(url_for('webhook'),
                            headers={'Content-Type': 'application/json'},
@@ -283,7 +283,7 @@ def test_update_server_handler_wrong(client, monkeypatch):
 
 def test_subscribers_handler(client, monkeypatch):
     # GIVEN a Flask application configured for testing
-    monkeypatch.setattr(manage_db, 'get_subscribers_count', lambda: 1)
+    monkeypatch.setattr(manage_pg_db, 'get_subscribers_count', lambda: 1)
     # WHEN the '/subscribers' page is requested (GET)
     response = client.get('/subscribers')
     # THEN check that the response is valid

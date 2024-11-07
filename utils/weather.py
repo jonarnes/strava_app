@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from urllib.parse import urlencode
+import json
 
 from utils import manage_pg_db
 from utils.strava_client import StravaClient
@@ -38,7 +39,7 @@ def add_weather(athlete_id: int, activity_id: int):
     """
     strava = StravaClient(athlete_id, activity_id)
     activity = strava.get_activity
-
+    #print(json.dumps(activity))
     # Activity type checking. Skip processing if activity is manual or indoor.
     if activity.get('manual', False) or activity.get('trainer', False) or activity.get('type', '') == 'VirtualRide':
         print(f"Activity with ID{activity_id} is manual created or indoor. Can't add weather info for it.")
@@ -181,3 +182,4 @@ def get_weather_icon(lat, lon, timestamp):
     except(KeyError, ValueError):
         print(f'ERROR! Weather request failed in ({lat},{lon}) at {timestamp}.')
         return
+    

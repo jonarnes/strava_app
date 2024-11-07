@@ -1,25 +1,25 @@
 import os
 import sqlite3
 import time
-
+import psycopg2
 import pytest
 from dotenv import load_dotenv
 
-from utils import manage_db
+from utils import manage_pg_db
 
 
 @pytest.fixture
 def db_token():
     return [
-        manage_db.Tokens(1, 'access_token_1', 'refresh_token_1', int(time.time()) + 100),
-        manage_db.Tokens(2, 'access_token_2', 'refresh_token_2', int(time.time()) - 100),
-        manage_db.Tokens(3, 'access_token_3', 'refresh_token_3', int(time.time()))
+        manage_pg_db.Tokens(1, 'access_token_1', 'refresh_token_1', int(time.time()) + 100),
+        manage_pg_db.Tokens(2, 'access_token_2', 'refresh_token_2', int(time.time()) - 100),
+        manage_pg_db.Tokens(3, 'access_token_3', 'refresh_token_3', int(time.time()))
     ]
 
 
 @pytest.fixture
 def db_settings():
-    return manage_db.Settings(1, 111, 222, 333, 444, 'en')
+    return manage_pg_db.Settings(1, 111, 222, 333, 444, 'en')
 
 
 @pytest.fixture

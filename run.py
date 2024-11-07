@@ -1,10 +1,11 @@
+#Running on https://app.koyeb.com/ (https://still-ebonee-jonarnes-761be123.koyeb.app/)
 import os
 from multiprocessing import Process
 
 from flask import Flask, url_for, render_template, request, session, abort, redirect, jsonify, send_from_directory
 from flask_restful import reqparse
 
-from utils import weather, manage_pg_db, strava_helpers, git_helpers
+from utils import weather, manage_pg_db, strava_helpers, git_helpers, gpt
 from utils.exceptions import StravaAPIError
 
 app = Flask(__name__)
@@ -80,7 +81,8 @@ def process_webhook_post():
     args = parser.parse_args()
     app.logger.info(args)  # TODO remove after debugging
     if args['aspect_type'] == 'create' and args['object_type'] == 'activity':
-        p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
+        #p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
+        p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
         p.daemon = True
         p.start()
     if args['updates'].get('authorized', '') == 'false':
@@ -128,6 +130,24 @@ def update_server():
         return 'wrong signature', 406
     git_helpers.pull()
     return 'Server successfully updated', 202
+
+@app.route('/test', methods=['GET'])
+def weather_update():
+    ATHLETE_ID = 4275964  # Erstatt med din faktiske Strava athlete ID
+    ACTIVITY_ID = 12819497186  # Erstatt med en faktisk aktivitets-ID fra Strava
+    
+    # Kjør testen
+    weather.add_weather(ATHLETE_ID, ACTIVITY_ID)
+    return 'Activity successfully updated', 200
+
+@app.route('/gpt', methods=['GET'])
+def gpt_feedback():
+    ATHLETE_ID = 4275964  # Erstatt med din faktiske Strava athlete ID
+    ACTIVITY_ID = 2393923570  # Erstatt med en faktisk aktivitets-ID fra Strava
+    
+    # Kjør testen
+    gpt.test_gpt(ATHLETE_ID, ACTIVITY_ID)
+    return 'Activity successfully updated', 200
 
 
 @app.errorhandler(404)
