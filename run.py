@@ -72,7 +72,6 @@ def webhook():
 
 
 def process_webhook_post():
-    print("entering wh post")
     parser = reqparse.RequestParser()
     parser.add_argument('owner_id', type=int, required=True)  # athlete's ID
     parser.add_argument('object_type', type=str, required=True)  # we need "activity" here
@@ -81,10 +80,10 @@ def process_webhook_post():
     parser.add_argument('updates', type=dict, required=True)  # For de-auth, there is {"authorized": "false"}
     args = parser.parse_args()
     app.logger.info(args)  # TODO remove after debugging
-    print(args)
+    #print(args)
     if args['aspect_type'] == 'create' and args['object_type'] == 'activity':
-        #p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
-        p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
+        p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
+        #p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
         p.daemon = True
         p.start()
     if args['updates'].get('authorized', '') == 'false':
