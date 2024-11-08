@@ -10,7 +10,7 @@ from flask.cli import with_appcontext
 
 Tokens = namedtuple('Tokens', 'id access_token refresh_token expires_at')
 Settings = namedtuple('Settings', 'id icon hum wind aqi lan')
-DEFAULT_SETTINGS = Settings(0, 0, 1, 1, 1, 'ru')
+DEFAULT_SETTINGS = Settings(0, 0, 1, 1, 1, 'en')
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 
@@ -29,12 +29,12 @@ def get_athlete(athlete_id: int):
         query= 'SELECT * FROM subscribers WHERE id = %s';
         cur.execute(query, (athlete_id,))
         record_db = cur.fetchone()
-
-        if record_db:
-            return Tokens(*record_db)
     finally:
             cur.close()
             db.close()
+    if record_db:
+        return Tokens(*record_db)
+
 
 def add_athlete(tokens: Tokens):
     tokens_db = get_athlete(tokens.id)

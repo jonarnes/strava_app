@@ -15,8 +15,7 @@
 
 {% block body %}
     <h2>Hello, {{ athlete }}!</h2>
-    <p class="lead">App is connected to your Strava profile, now you can select additional metrics
-        to be added to your activities description. The temperature is always displayed by default.</p>
+    <p class="lead">App is connected to your Strava profile, now you can select the language of the feedback</p>
     <form action="/final/" method="post">
         <fieldset>
 
@@ -32,10 +31,4 @@
             <input type="submit" value="Save settings">
         </fieldset>
     </form>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script type="text/javascript">
-        $('#mycheckbox').change(function () {
-            $('#mycheckboxdiv').toggle();
-        });
-    </script>
-{% endblock %}
+    {% endblock %}
