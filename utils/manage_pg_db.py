@@ -25,28 +25,34 @@ def get_db():
 def get_athlete(athlete_id: int):
     db = get_db()
     cur = db.cursor()
-    query= 'SELECT * FROM subscribers WHERE id = %s';
-    cur.execute(query, (athlete_id,))
-    record_db = cur.fetchone()
+    try:
+        query= 'SELECT * FROM subscribers WHERE id = %s';
+        cur.execute(query, (athlete_id,))
+        record_db = cur.fetchone()
 
-    if record_db:
-        return Tokens(*record_db)
-
+        if record_db:
+            return Tokens(*record_db)
+    finally:
+            cur.close()
+            db.close()
 
 def add_athlete(tokens: Tokens):
     tokens_db = get_athlete(tokens.id)
     db = get_db()
     cur = db.cursor()
-    if not tokens_db:
-        sql = 'INSERT INTO subscribers VALUES(%s, %s, %s, %s)'
-        cur.execute(sql, tokens)
-    elif tokens.access_token != tokens_db.access_token:
-        sql = f'UPDATE subscribers SET access_token = %s, refresh_token = %s, expires_at = %s WHERE id = {tokens.id};'
-        cur.execute(sql, tokens[1:])
-    else:
-        return
-    db.commit()
-
+    try:
+        if not tokens_db:
+            sql = 'INSERT INTO subscribers VALUES(%s, %s, %s, %s)'
+            cur.execute(sql, tokens)
+        elif tokens.access_token != tokens_db.access_token:
+            sql = f'UPDATE subscribers SET access_token = %s, refresh_token = %s, expires_at = %s WHERE id = {tokens.id};'
+            cur.execute(sql, tokens[1:])
+        else:
+            return
+        db.commit()
+    finally:
+        cur.close()
+        db.close()
 
 def add_settings(settings: Settings):
     """Write to database preferable metrics of weather description.
@@ -55,20 +61,23 @@ def add_settings(settings: Settings):
     """
     db = get_db()
     cur = db.cursor()
-    query = 'SELECT * FROM settings WHERE id = %s;'
-    cur.execute(query, (settings.id,))
-    settings_db = cur.fetchone()
-    if settings_db:
-        if settings == Settings(*settings_db):
-            return
-        sql = f'UPDATE settings SET icon = %s, humidity = %s, wind = %s, aqi = %s, lan = %s WHERE id = {settings.id};'
-        cur.execute(sql, settings[1:])
-    else:
-        if settings[1:] == DEFAULT_SETTINGS[1:]:
-            return
-        cur.execute('INSERT INTO settings VALUES(%s, %s, %s, %s, %s, %s)', settings)
-    db.commit()
-
+    try:
+        query = 'SELECT * FROM settings WHERE id = %s;'
+        cur.execute(query, (settings.id,))
+        settings_db = cur.fetchone()
+        if settings_db:
+            if settings == Settings(*settings_db):
+                return
+            sql = f'UPDATE settings SET icon = %s, humidity = %s, wind = %s, aqi = %s, lan = %s WHERE id = {settings.id};'
+            cur.execute(sql, settings[1:])
+        else:
+            if settings[1:] == DEFAULT_SETTINGS[1:]:
+                return
+            cur.execute('INSERT INTO settings VALUES(%s, %s, %s, %s, %s, %s)', settings)
+        db.commit()
+    finally:
+        cur.close()
+        db.close()
 
 def get_settings(athlete_id: int):
     """Read database and return weather description settings. If settings not provided function
@@ -79,24 +88,31 @@ def get_settings(athlete_id: int):
     """
     db = get_db()
     cur = db.cursor()
-    query = 'SELECT * FROM settings WHERE id = %s;'
-    cur.execute(query, (athlete_id,))
-    sel = cur.fetchone()
-    if sel:
-        return Settings(*sel)
-    else:
-        return DEFAULT_SETTINGS._replace(id=athlete_id)
+    try:
+        query = 'SELECT * FROM settings WHERE id = %s;'
+        cur.execute(query, (athlete_id,))
+        sel = cur.fetchone()
+        if sel:
+            return Settings(*sel)
+        else:
+            return DEFAULT_SETTINGS._replace(id=athlete_id)
+    finally:
+        cur.close()
+        db.close()
 
 def get_subscribers_count():
     """Count total count of application users
     """
     db = get_db()
     cur = db.cursor()
-    query = 'SELECT COUNT(*) FROM subscribers;'
-    cur.execute(query)
-    result = cur.fetchone()
-    return result[0]
-
+    try:
+        query = 'SELECT COUNT(*) FROM subscribers;'
+        cur.execute(query)
+        result = cur.fetchone()
+        return result[0]
+    finally:
+        cur.close()
+        db.close()
 
 
 def delete_athlete(athlete_id: int):
@@ -106,10 +122,13 @@ def delete_athlete(athlete_id: int):
     """
     db = get_db()
     cur = db.cursor()
-    cur.execute('DELETE FROM subscribers WHERE id = %s', (athlete_id,))
-    cur.execute('DELETE FROM settings WHERE id = %s', (athlete_id,))
-    db.commit()
-
+    try:
+        cur.execute('DELETE FROM subscribers WHERE id = %s', (athlete_id,))
+        cur.execute('DELETE FROM settings WHERE id = %s', (athlete_id,))
+        db.commit()
+    finally:
+        cur.close()
+        db.close()
 
 def init_app(app):
     #app.teardown_appcontext(close_db)
@@ -119,7 +138,7 @@ def init_app(app):
 def init_db():
     """Initial function for database creation."""
     db = get_db()
-    print(db)
+    
 
 
 def close_db(e=None):

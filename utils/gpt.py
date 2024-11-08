@@ -11,15 +11,17 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 
 def test_gpt(athlete_id: int, activity_id: int):
-    print(athlete_id)
     settings = manage_pg_db.get_settings(athlete_id)
     client = OpenAI()
     strava = StravaClient(athlete_id, activity_id)
     activity = strava.get_activity
     print(activity)
     elapsed_time = timedelta(seconds=activity.get('elapsed_time', 0))
-    time_pr_km = timedelta(seconds=activity.get('elapsed_time', 0)/(activity.get('distance')/1000))
     distance = activity.get('distance')/1000
+    if distance>0:
+        time_pr_km = timedelta(seconds=activity.get('elapsed_time', 0)/(activity.get('distance')/1000))
+    else:
+            time_pr_km = None
     total_elevation_gain = activity.get('total_elevation_gain')
     sport_type = activity.get('sport_type')
     workout_type = activity.get('workout_type')
@@ -45,14 +47,16 @@ def test_gpt(athlete_id: int, activity_id: int):
     language_prompt = " Skriv svaret på norsk."
     if settings.lan == "en":
         language_prompt =""
+    if settings.lan == "sv":
+        language_prompt ="Provide the answer in swedish language"
 
     coach_tone =f"""
-    You're my coach. You're result oriented but motivating and you're pushing me hard. Your tone is sarcastic and tough but funny. You're often shouting.
+    You're my coach. You're result oriented but motivating and you're pushing me hard. Your tone is sarcastic,cheaky and tough, but funny. You're often shouting.
     You give me feedback in the form of a short text message suited for social media. You may use slang, abbreviations and emoticons. You always compare my results and efforts to professional athletes' results and efforts expecting the same from me.
-    You don't like activities of type {bad_activities}, becasue you think it's better to be out in nature, get wet and dirty and not needing electically powered aids.
+    You don't like activities of type {bad_activities}, becasue you think it's better to be out in nature, get wet and dirty and not needing electically powered aids. These activities are for cowards.
     You are extatic about activities of type {good_activities}, becasue you like the outdoors, winter, snow, fresh air and mountaineering.
-    However, make sure that the feedback is related to the actual activity ({sport_type}).
-    Sometimes you may blame my equipment ({device},{gear}) questioning if I they're the reason for my performance.
+    However, make sure that the feedback is relevant to the actual activity ({sport_type}).
+    Sometimes you may blame my equipment ({device},{gear}) questioning if I they're the reason for my "poor" performance.
     If there is information about "relative effort", you should know that higher number is better. An average score for an OK workout is 30. Higher than 50 should be appreciated.
     """
     if(manual_activity or trainer):
@@ -79,7 +83,7 @@ def test_gpt(athlete_id: int, activity_id: int):
     print(coach_tone)
     print(prompt)
 
-    lead_text ="Melding fra 🤖Gjert:"
+    lead_text ="🤖 Feedback:"
 
     description = activity.get('description','')
     print(f"description: {description}")
@@ -99,7 +103,6 @@ def test_gpt(athlete_id: int, activity_id: int):
     )
 
     #print(json.dumps(activity))
-    print(completion.choices[0].message.content)
     description = '' if description is None else description.rstrip() + '\n'
 
     payload = {'description': description + lead_text +"\n" + completion.choices[0].message.content }
