@@ -100,9 +100,8 @@ def test_gpt(athlete_id: int, activity_id: int):
 
     #print(json.dumps(activity))
     print(completion.choices[0].message.content)
-    description = '' if description is None else description.rstrip() + '\n' + lead_text +"\n" + completion.choices[0].message.content
+    description = '' if description is None else description.rstrip() + '\n'
 
-
-    payload = {'description': description }
+    payload = {'description': description + lead_text +"\n" + completion.choices[0].message.content }
     print('DESCRIPTION FOR STRAVA:', payload)
     strava.modify_activity(payload)
