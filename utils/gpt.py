@@ -16,7 +16,7 @@ def test_gpt(athlete_id: int, activity_id: int):
     client = OpenAI()
     strava = StravaClient(athlete_id, activity_id)
     activity = strava.get_activity
-    
+    print(activity)
     elapsed_time = timedelta(seconds=activity.get('elapsed_time', 0))
     time_pr_km = timedelta(seconds=activity.get('elapsed_time', 0)/(activity.get('distance')/1000))
     distance = activity.get('distance')/1000
@@ -81,8 +81,9 @@ def test_gpt(athlete_id: int, activity_id: int):
 
     lead_text ="Melding fra 🤖Gjert:"
 
-    description = activity.get('description')
-    if lead_text in description:
+    description = activity.get('description','')
+    print(f"description: {description}")
+    if lead_text in (description or ''):
         print(f'Coach for activity ID={activity_id} is already set.')
         return  # ok, but no processing
 
@@ -98,7 +99,7 @@ def test_gpt(athlete_id: int, activity_id: int):
     )
 
     #print(json.dumps(activity))
-
+    print(completion.choices[0].message.content)
     description = '' if description is None else description.rstrip() + '\n' + lead_text +"\n" + completion.choices[0].message.content
 
 

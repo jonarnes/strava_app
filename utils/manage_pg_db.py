@@ -1,4 +1,7 @@
 import psycopg2
+import os
+from dotenv import load_dotenv
+
 from collections import namedtuple
 
 import click
@@ -8,16 +11,15 @@ from flask.cli import with_appcontext
 Tokens = namedtuple('Tokens', 'id access_token refresh_token expires_at')
 Settings = namedtuple('Settings', 'id icon hum wind aqi lan')
 DEFAULT_SETTINGS = Settings(0, 0, 1, 1, 1, 'ru')
+load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 
 def get_db():
-    if 'db' not in g:
-        conn = psycopg2.connect(database=current_app.config['DATABASE_NAME'],
-                        host=current_app.config['DATABASE_HOST'],
-                        user=current_app.config['DATABASE_USER'],
-                        password=current_app.config['DATABASE_PASSWORD'])
-        g.db = conn
-    return g.db
+    conn = psycopg2.connect(database=os.environ.get('DATABASE_NAME'),
+                    host=os.environ.get('DATABASE_HOST'),
+                    user=os.environ.get('DATABASE_USER'),
+                    password=os.environ.get('DATABASE_PASSWORD'))
+    return conn
 
 
 def get_athlete(athlete_id: int):
@@ -110,15 +112,15 @@ def delete_athlete(athlete_id: int):
 
 
 def init_app(app):
-    app.teardown_appcontext(close_db)
+    #app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
 
 
 def init_db():
     """Initial function for database creation."""
     db = get_db()
-    with current_app.open_resource('sql_db.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+    print(db)
+
 
 def close_db(e=None):
     db = g.pop('db', None)

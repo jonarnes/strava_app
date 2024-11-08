@@ -20,6 +20,7 @@ app.config.from_mapping(
     DATABASE_PASSWORD=os.environ.get('DATABASE_PASSWORD'),
     DATABASE_NAME=os.environ.get('DATABASE_NAME')
 )
+
 manage_pg_db.init_app(app)
 
 
@@ -75,27 +76,21 @@ def webhook():
 def process_webhook_post():
     print(request.get_data())
     parser = reqparse.RequestParser()
-    parser.add_argument('owner_id', type=int, required=True)  # athlete's ID
-    parser.add_argument('object_type', type=str, required=True)  # we need "activity" here
-    parser.add_argument('object_id', type=int, required=True)  # activity's ID
-    parser.add_argument('aspect_type', type=str, required=True)  # Always "create," "update," or "delete."
-    parser.add_argument('updates', type=dict, required=True)  # For de-auth, there is {"authorized": "false"}
+    parser.add_argument('owner_id', type=int, required=True, help='owner missing')  # athlete's ID
+    parser.add_argument('object_type', type=str, required=True, help='object type missing')  # we need "activity" here
+    parser.add_argument('object_id', type=int, required=True, help='object id missing')  # activity's ID
+    parser.add_argument('aspect_type', type=str, required=True, help='aspect type missing')  # Always "create," "update," or "delete."
+    parser.add_argument('updates', type=dict, required=False, help='updates missing',default={})  # For de-auth, there is {"authorized": "false"}
     print("før args")
-    try:
-        args = parser.parse_args()
-    except:
-      print("An exception occurred")
-    print(parser)
+    args = parser.parse_args()
+    print(parser.args)
     #app.logger.info(args)  # TODO remove after debugging
 
     if args['aspect_type'] == 'create' and args['object_type'] == 'activity':
-        print("starter")
-        p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
-        #p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
+        #p = Process(target=weather.add_weather, args=(args['owner_id'], args['object_id']))
+        p = Process(target=gpt.test_gpt, args=(args['owner_id'], args['object_id']))
         p.daemon = True
         p.start()
-        print("her")
-
     if args['updates'].get('authorized', '') == 'false':
         manage_pg_db.delete_athlete(args['owner_id'])
 
