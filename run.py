@@ -1,4 +1,8 @@
 #Running on https://app.koyeb.com/ (https://still-ebonee-jonarnes-761be123.koyeb.app/)
+
+# https://buymeacoffee.com/jonarnes
+
+
 import os
 from multiprocessing import Process
 

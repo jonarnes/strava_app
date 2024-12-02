@@ -8,10 +8,9 @@ Add the feedback of a tough coach with a sarcastic tone to the description of yo
 {% endblock %}
 
 {% block body %}
-    <p class="lead">
-        
+    <p class="lead">        
         After clicking on the button, you will be redirected to the Strava login form.
         It is necessary to leave the selected access rights for the application, otherwise it will not be able to
-        work correctly. You can cancel your subscription at any time. It's free. Nothing more than your Strava subscription ID is stored. No data about your acrtivities are stored or kept in any way.</p>
+        work correctly. You can cancel your subscription at any time from the <a href="https://www.strava.com/settings/apps" target="_top">settings on strava.com</a>. It's free. Nothing more than your Strava subscription ID is stored. No data about your acrtivities are stored or kept in any way.</p>
     <p class="lead"><a href="{{ url_to_get_code }}" style="height: 70px;"><img src="/static/connectwith.svg" alt="connect with Strava"></a></p>
 {% endblock %}

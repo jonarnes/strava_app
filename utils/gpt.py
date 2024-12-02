@@ -44,11 +44,8 @@ def test_gpt(athlete_id: int, activity_id: int):
     good_activities = "NordicSki,MountainBikeRide,TrailRun,BackcountrySki,NordicSki,Hike"
 
     settings = manage_pg_db.get_settings(athlete_id)
-    language_prompt = " Skriv svaret på norsk."
-    if settings.lan == "en":
-        language_prompt =""
-    if settings.lan == "sv":
-        language_prompt ="Provide the answer in swedish language"
+
+    language_prompt =f" Provide the answer in {settings.lan} language"
 
     coach_tone =f"""
     You're my coach. You're result oriented but motivating and you're pushing me hard. Your tone is sarcastic,cheaky and tough, but funny. You're often shouting.
